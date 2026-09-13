@@ -3,13 +3,13 @@
 # NEVER commit real API keys or Telegram bot tokens.
 
 RAPIDAPI_KEY = "YOUR_RAPIDAPI_KEY"
-RAPIDAPI_HOST = "irctc1.p.rapidapi.com"
+RAPIDAPI_HOST = "irctc-api3.p.rapidapi.com"
 
 TELEGRAM_BOT_TOKEN = "YOUR_TELEGRAM_BOT_TOKEN"
 TELEGRAM_CHAT_ID = "YOUR_TELEGRAM_CHAT_ID"
 
 TRAIN_NUMBER = "12951"
-JOURNEY_DATE = "2026-09-20"
+JOURNEY_DATE = "2026-09-20"  # YYYY-MM-DD; code converts to DD-MM-YYYY for this API
 FROM_STATION = "NDLS"
 TO_STATION = "BCT"
 
