@@ -3,7 +3,6 @@ name: IRCTC Seat Availability Check
 on:
   workflow_dispatch:
   schedule:
-    # Every 5 minutes. GitHub Actions scheduled workflows use UTC by default.
     - cron: '*/5 * * * *'
 
 jobs:
@@ -35,8 +34,8 @@ jobs:
 
           RAPIDAPI_KEY = os.environ["RAPIDAPI_KEY"]
           RAPIDAPI_HOST = os.environ.get("RAPIDAPI_HOST", "irctc-api3.p.rapidapi.com")
-          TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
-          TELEGRAM_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
+          TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+          TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 
           TRAIN_NUMBER = "12951"
           JOURNEY_DATE = "2026-09-20"
@@ -48,4 +47,9 @@ jobs:
           PY
 
       - name: Check availability
+        env:
+          RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
+          RAPIDAPI_HOST: ${{ secrets.RAPIDAPI_HOST }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python main.py
