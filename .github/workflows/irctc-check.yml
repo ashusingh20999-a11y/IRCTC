@@ -3,12 +3,12 @@ name: IRCTC Seat Availability Check
 on:
   workflow_dispatch:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '*/10 * * * *'
 
 jobs:
   check-availability:
     runs-on: ubuntu-latest
-    timeout-minutes: 2
+    timeout-minutes: 4
 
     steps:
       - name: Checkout repository
@@ -37,13 +37,22 @@ jobs:
           TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
           TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 
-          TRAIN_NUMBER = "12951"
           JOURNEY_DATE = "2026-09-20"
-          FROM_STATION = "NDLS"
-          TO_STATION = "BCT"
           CLASSES_TO_CHECK = ["SL", "3A", "2A"]
           QUOTA = "GN"
-          POLL_INTERVAL_SECONDS = 0
+
+          ROUTES = [
+              {"name": "Bhopal → Indore", "train_number": "18234", "train_name": "Narmada Express", "from_station": "BPL", "to_station": "INDB"},
+              {"name": "Indore → Bhopal", "train_number": "18233", "train_name": "Narmada Express", "from_station": "INDB", "to_station": "BPL"},
+              {"name": "Bhopal → Gwalior", "train_number": "12192", "train_name": "Shridham SF Express", "from_station": "BPL", "to_station": "GWL"},
+              {"name": "Gwalior → Bhopal", "train_number": "12191", "train_name": "Shridham SF Express", "from_station": "GWL", "to_station": "BPL"},
+              {"name": "Indore → Gwalior", "train_number": "12919", "train_name": "Malwa Express", "from_station": "INDB", "to_station": "GWL"},
+              {"name": "Gwalior → Indore", "train_number": "12920", "train_name": "Malwa Express", "from_station": "GWL", "to_station": "INDB"},
+              {"name": "Gwalior → Etawah", "train_number": "19811", "train_name": "Kota-Etawah Express", "from_station": "GWL", "to_station": "ETW"},
+              {"name": "Etawah → Gwalior", "train_number": "19812", "train_name": "Kota-Etawah Express", "from_station": "ETW", "to_station": "GWL"},
+              {"name": "Indore → Etawah", "train_number": "04170", "train_name": "Indore-Subedarganj Special", "from_station": "INDB", "to_station": "ETW"},
+              {"name": "Etawah → Indore", "train_number": "04169", "train_name": "Subedarganj-Indore Special", "from_station": "ETW", "to_station": "INDB"},
+          ]
           PY
 
       - name: Check availability
