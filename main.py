@@ -38,19 +38,25 @@ def is_available(status):
 
 def build_report(results):
     lines = [
-        f"Train {TRAIN_NUMBER} | {FROM_STATION} -> {TO_STATION}",
+        "🚆 IRCTC Seat Availability Update",
+        "",
+        f"Train: {TRAIN_NUMBER}",
+        f"Route: {FROM_STATION} → {TO_STATION}",
         f"Journey date: {JOURNEY_DATE}",
+        "",
     ]
 
     for travel_class, result in results.items():
-        lines.append(f"{travel_class}: {extract_status(result)}")
+        status = extract_status(result)
+        icon = "✅" if is_available(status) else "❌"
+        lines.append(f"{icon} {travel_class}: {status}")
 
     return "\n".join(lines)
 
 
 def main():
-    # GitHub Actions already runs this workflow every 5 minutes. Do exactly
-    # one API check per workflow run to avoid RapidAPI rate limiting (429).
+    # GitHub Actions runs this workflow every 5 minutes. Do exactly one
+    # API check per workflow run to avoid RapidAPI rate limiting (429).
     print("Starting one-shot IRCTC availability check...")
 
     try:
@@ -66,13 +72,14 @@ def main():
 
         if available_classes:
             message = (
-                "IRCTC availability alert\n\n"
                 f"{report}\n\n"
-                f"Available/RAC class(es): {', '.join(available_classes)}"
+                f"🎉 Available/RAC: {', '.join(available_classes)}"
             )
-            send_telegram_message(message)
         else:
-            print("No available/RAC class found. No Telegram alert sent.")
+            message = f"{report}\n\nℹ️ No Available/RAC class found right now."
+
+        # Send every check result to Telegram, not only when a seat is found.
+        send_telegram_message(message)
 
     except Exception as error:
         print(f"[{datetime.now()}] Checker error: {error}")
