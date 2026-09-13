@@ -1,12 +1,11 @@
 from datetime import datetime
 
 from checker import check_availability
-from config import TRAIN_NUMBER, JOURNEY_DATE, FROM_STATION, TO_STATION
+from config import JOURNEY_DATE
 from telegram import send_telegram_message
 
 
 def extract_status(result):
-    """Extract a human-readable availability status from common API shapes."""
     if isinstance(result, dict):
         if "error" in result:
             return f"ERROR: {result['error']}"
@@ -36,49 +35,44 @@ def is_available(status):
     return status.startswith("AVAILABLE") or status.startswith("RAC")
 
 
-def build_report(results):
-    lines = [
-        "🚆 IRCTC Seat Availability Update",
-        "",
-        f"Train: {TRAIN_NUMBER}",
-        f"Route: {FROM_STATION} → {TO_STATION}",
-        f"Journey date: {JOURNEY_DATE}",
-        "",
-    ]
-
-    for travel_class, result in results.items():
-        status = extract_status(result)
-        icon = "✅" if is_available(status) else "❌"
-        lines.append(f"{icon} {travel_class}: {status}")
-
-    return "\n".join(lines)
-
-
 def main():
-    # GitHub Actions runs this workflow every 5 minutes. Do exactly one
-    # API check per workflow run to avoid RapidAPI rate limiting (429).
-    print("Starting one-shot IRCTC availability check...")
+    print("Starting one-shot multi-city IRCTC availability check...")
 
     try:
         results = check_availability()
-        report = build_report(results)
-        print(f"\n[{datetime.now().isoformat(timespec='seconds')}]\n{report}")
-
-        available_classes = [
-            travel_class
-            for travel_class, result in results.items()
-            if is_available(extract_status(result))
+        lines = [
+            "🚆 IRCTC Multi-City Seat Update",
+            f"Journey date: {JOURNEY_DATE}",
+            "",
         ]
+        available = []
 
-        if available_classes:
-            message = (
-                f"{report}\n\n"
-                f"🎉 Available/RAC: {', '.join(available_classes)}"
+        for route_name, route_result in results.items():
+            lines.append(
+                f"🚉 {route_result['train_number']} {route_result['train_name']}"
             )
-        else:
-            message = f"{report}\n\nℹ️ No Available/RAC class found right now."
+            lines.append(
+                f"{route_result['from_station']} → {route_result['to_station']}"
+            )
 
-        # Send every check result to Telegram, not only when a seat is found.
+            for travel_class, result in route_result["classes"].items():
+                status = extract_status(result)
+                icon = "✅" if is_available(status) else "❌"
+                lines.append(f"{icon} {travel_class}: {status}")
+                if is_available(status):
+                    available.append(
+                        f"{route_result['train_number']} {route_result['from_station']}→{route_result['to_station']} {travel_class}: {status}"
+                    )
+            lines.append("")
+
+        if available:
+            lines.append("🎉 AVAILABLE / RAC")
+            lines.extend(available)
+        else:
+            lines.append("ℹ️ No Available/RAC class found right now.")
+
+        message = "\n".join(lines)
+        print(f"\n[{datetime.now().isoformat(timespec='seconds')}]\n{message}")
         send_telegram_message(message)
 
     except Exception as error:
