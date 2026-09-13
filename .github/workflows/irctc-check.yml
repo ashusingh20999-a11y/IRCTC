@@ -34,7 +34,7 @@ jobs:
           import os
 
           RAPIDAPI_KEY = os.environ["RAPIDAPI_KEY"]
-          RAPIDAPI_HOST = os.environ.get("RAPIDAPI_HOST", "irctc1.p.rapidapi.com")
+          RAPIDAPI_HOST = os.environ.get("RAPIDAPI_HOST", "irctc-api3.p.rapidapi.com")
           TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
           TELEGRAM_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
 
