@@ -1,14 +1,7 @@
-import time
 from datetime import datetime
 
 from checker import check_availability
-from config import (
-    TRAIN_NUMBER,
-    JOURNEY_DATE,
-    FROM_STATION,
-    TO_STATION,
-    POLL_INTERVAL_SECONDS,
-)
+from config import TRAIN_NUMBER, JOURNEY_DATE, FROM_STATION, TO_STATION
 from telegram import send_telegram_message
 
 
@@ -56,35 +49,34 @@ def build_report(results):
 
 
 def main():
-    print("Starting IRCTC availability checker. Press Ctrl+C to stop.")
-    previous_status = {}
+    # GitHub Actions already runs this workflow every 5 minutes. Do exactly
+    # one API check per workflow run to avoid RapidAPI rate limiting (429).
+    print("Starting one-shot IRCTC availability check...")
 
-    while True:
-        try:
-            results = check_availability()
-            report = build_report(results)
-            print(f"\n[{datetime.now().isoformat(timespec='seconds')}]\n{report}")
+    try:
+        results = check_availability()
+        report = build_report(results)
+        print(f"\n[{datetime.now().isoformat(timespec='seconds')}]\n{report}")
 
-            for travel_class, result in results.items():
-                status = extract_status(result)
-                old_status = previous_status.get(travel_class)
+        available_classes = [
+            travel_class
+            for travel_class, result in results.items()
+            if is_available(extract_status(result))
+        ]
 
-                # Notify when a class becomes available/RAC or changes to a new
-                # available status. This avoids sending the same alert every poll.
-                if is_available(status) and status != old_status:
-                    message = (
-                        "IRCTC availability alert\n\n"
-                        f"{report}\n\n"
-                        f"Class {travel_class} is currently available."
-                    )
-                    send_telegram_message(message)
+        if available_classes:
+            message = (
+                "IRCTC availability alert\n\n"
+                f"{report}\n\n"
+                f"Available/RAC class(es): {', '.join(available_classes)}"
+            )
+            send_telegram_message(message)
+        else:
+            print("No available/RAC class found. No Telegram alert sent.")
 
-                previous_status[travel_class] = status
-
-        except Exception as error:
-            print(f"[{datetime.now()}] Checker error: {error}")
-
-        time.sleep(POLL_INTERVAL_SECONDS)
+    except Exception as error:
+        print(f"[{datetime.now()}] Checker error: {error}")
+        raise
 
 
 if __name__ == "__main__":
